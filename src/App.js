@@ -1,60 +1,49 @@
 import React from "react";
 import "./styles.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function App() {
-  const [toDo, setToDo] = useState("");
-  const [toDos, setToDos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [coins, setCoins] = useState([]);
+  useEffect(() => {
+    fetch("https://api.coinpaprika.com/v1/tickers?limit=1000")
+      .then((response) => response.json())
+      .then((json) => {
+        setCoins(json);
+        setLoading(false);
+      });
+  }, []);
+  const [balance, setBalance] = useState(0);
   const onChange = (event) => {
-    setToDo(event.target.value);
-  };
-  const onSubmit = (event) => {
-    event.preventDefault();
-    if (toDo === "") {
-      return;
-    }
-    setToDos((currentArray) => {
-      const newArray = [toDo, ...currentArray];
-      console.log(newArray);
-      return newArray;
-    });
-    setToDo("");
-    console.log(toDos);
-  };
-
-  const deleteBtn = (event) => {
-    const li = event.target.parentElement;
-    li.remove();
-  };
-  const reset = () => {
-    setToDos([]);
+    setBalance(event.target.value);
   };
 
   return (
-    <div className="App">
-      <h1>My To Dos ({toDos.length})</h1>
-
-      <form onSubmit={onSubmit}>
-        <input
-          onChange={onChange}
-          value={toDo}
-          placeholder="Write your to do..."
-          type="text"
-        />
-        <button>Add to Do </button>
-      </form>
-      <span style={{ display: "flex", justifyContent: "flex-end" }}>
-        <button onClick={reset}>Reset</button>
-      </span>
-      <hr />
-      <ul>
-        {toDos.map((item, index) => (
-          <li key={index} style={{ textAlign: "left" }}>
-            {item}
-            <button onClick={deleteBtn}>X</button>
-          </li>
-        ))}
-      </ul>
+    <div>
+      <h1>The Coins! {loading ? "" : `(${coins.length})`}</h1>
+      {loading ? (
+        <strong>Loading...</strong>
+      ) : (
+        <div>
+          <div>
+            <label htmlFor="money">$</label>
+            <input
+              id="money"
+              type="number"
+              onChange={onChange}
+              placeholder="Money you have.."
+            ></input>
+          </div>
+          <select>
+            {coins.map((coin) => (
+              <option>
+                {coin.name} ({coin.symbol}): ${coin.quotes.USD.price}USD Count:
+                {Math.round(balance / coin.quotes.USD.price)}
+              </option>
+            ))}{" "}
+          </select>
+        </div>
+      )}
     </div>
   );
 }
